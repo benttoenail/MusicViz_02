@@ -4,16 +4,66 @@ Max Rose -->  July 4th, 2016
 INDEPENDANCE DAY 
 */
 
+/*
+COLORS USED
+E23721 -- red
+54B0E4 -- Blue
+B3007C -- red purple
+92007B -- bluish purple
+*/
+
 //Init of camera, scene and renderer
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 var renderer = new THREE.WebGLRenderer({alpha : true});
 
-//set up Lights
-var dirLight = new THREE.DirectionalLight(0xFFFFF);
-scene.add(dirLight);
 
-scene.fog = new THREE.FogExp2(0xfffff, .025);
+// -- -- -- LIGHTING -- -- -- \\
+var dirLight = new THREE.DirectionalLight(0xFFFFF);
+dirLight.position.set(10, 20, 5);
+dirLight.target.position.set(scene.position);
+//scene.add(dirLight);
+
+var spotlight1 = new THREE.SpotLight(0x54B0E4);
+var spotlight2 = new THREE.SpotLight(0xE23721);
+
+//Spotlight1
+spotlight1.position.set(-10, 20, 5);
+spotlight1.castShadow = true;
+
+spotlight1.shadowMapHeight = 1024;
+spotlight1.shadowMapWidth  = 1024;
+
+spotlight1.penumbra = .36;
+
+//SpotLight 2
+spotlight2.position.set(10, 20, 5);
+spotlight2.castShadow = true;
+
+spotlight2.shadowMapHeight = 1024;
+spotlight2.shadowMapWidth  = 1024;
+
+spotlight2.penumbra = .36;
+
+scene.add(spotlight1, spotlight2);
+
+renderer.shadowMapEnabled = true;
+renderer.shadowMapSoft = false;
+
+renderer.shadowCameraNear = 500;
+renderer.shadowCameraFar  = 4000;
+renderer.shadowCameraFov = 50;
+
+renderer.shadowMapBias = 1;
+renderer.shadowMapDarkness = .1;
+//renderer.shadowMapHeight = 2048;
+//renderer.shadowMapWidth  = 2048;
+
+dirLight.castShadow = true;
+
+scene.fog = new THREE.FogExp2(0xE23721, .025);
+
+// -- -- -- END LIGHTING -- -- -- \\
 
 //Audio Controls
 var audio, analyser, frequencydata;
@@ -43,11 +93,27 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 controls.enableZoom = true;
 
-//Ground Helper
-var ground = new THREE.GridHelper(10, 0.5, 0xd3d3d3, 0xd3d3d3);
-ground.position.y = - 2;
-scene.add(ground);
+camera.position.z = 10;
+camera.up = new THREE.Vector3(0,0,1);
+camera.lookAt(new THREE.Vector3(0, 1.8, 0));
 
+var camPivot = new THREE.Object3D();
+camPivot.add(camera);
+scene.add(camPivot);
+
+//Ground Helper
+var grid = new THREE.GridHelper(10, 0.5, 0xd3d3d3, 0xd3d3d3);
+grid.position.y = - 2;
+//scene.add(grid);
+
+//Ground Plane
+var planeGeo = new THREE.PlaneGeometry(100, 100, 5, 5);
+var planeMat = new THREE.MeshLambertMaterial({color:0xE23721});
+var plane    = new THREE.Mesh(planeGeo, planeMat);
+plane.rotation.x = -Math.PI / 2;
+plane.position.y = -2;
+plane.receiveShadow = true;
+scene.add(plane);
 
 
 //creation of sphere and objects
@@ -58,10 +124,11 @@ function SphereObjects(){
     
     var sphereMat = new THREE.MeshLambertMaterial({color:0xFFFFF, wireframe:true});
     var sphere    = new THREE.Mesh(sphereGeo, sphereMat);
+    
     scene.add(sphere);
     
     var cubeGeo   = new THREE.BoxGeometry(.25, .25, .25);
-    var mat = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    var mat = new THREE.MeshPhongMaterial({ color: 0x54B0E4 });
     
     for(var i = 0; i < sphere.geometry.vertices.length; i++){
         var cube = new THREE.Mesh(cubeGeo, mat); 
@@ -73,6 +140,7 @@ function SphereObjects(){
         
         cube.lookAt(scene.position);
         
+        cube.castShadow = true;
         scene.add(cube);
         cubeArray.push(cube);
     }
@@ -87,7 +155,7 @@ function CylinderArray(){
     var radius = .75;
     
     var geo = new THREE.CylinderGeometry(radius, radius, height, 32);
-    var mat = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    var mat = new THREE.MeshPhongMaterial({ color: 0xB3007C });
     geo.translate(0, .5, 0);
     
     var max = 50;
@@ -106,26 +174,57 @@ function CylinderArray(){
         cylinder.position.z = location.z;
         cylinder.position.y = -2;
         
+        cylinder.castShadow = true;
         scene.add(cylinder);
         cylinderArray.push(cylinder);
     }
 }
 
-//Animate Cubes
+//Create sphere strips\\
+var stripArray = [];
+var theta = 3;
+function SphereStrips(){
+    //Create Sphere Strips\\
+    var stripGeo = new THREE.SphereGeometry(4, 5, 20, 1, 0.4, theta, 3.5 );
+    var stripMat = new THREE.MeshPhongMaterial({ color: 0xB3007C,
+                                                transparent : true,
+                                                opacity : .5 }); 
+    
+    for(var i = 0; i < 4; i ++){
+        var strip = new THREE.Mesh(stripGeo, stripMat);
+        
+        strip.position.y = 2;
+        strip.rotation.x = .05 + i;
+        strip.rotation.z = .05 + i;
+        
+        strip.overdraw = true;
+        strip.material.side = THREE.doubleSided;
+        
+        strip.castShadow = true;
+        stripArray.push(strip);
+        scene.add(strip);
+    }
+    
+}
 
+// -- -- -- ANIMATE SCENE -- -- -- \\
 function AnimateScene(){
     
     var time = clock.getElapsedTime();
-    document.getElementById("clock").innerHTML = time;
+   // document.getElementById("clock").innerHTML = time;
     
     analyser.getByteFrequencyData(frequencydata);
     
     sphereGeo.verticesNeedUpdate = true;
     
     var position, target;
+    var yPos = 2; // Center object's height locaiton
     
     var smoothValue = 0;
     smoothValue +=  (frequencydata[0] - smoothValue) * .1;
+    
+    spotlight1.intensity = smoothValue / 15;
+    spotlight2.intensity = smoothValue / 15;
     
     //animate the cubes
     for(var i = 0; i < sphereGeo.vertices.length; i++){
@@ -133,8 +232,7 @@ function AnimateScene(){
             py = Math.cos(i) * smoothValue / 10 ,
             pz = Math.sin(i) * smoothValue / 10;
         
-        sphereGeo.vertices[i].set(px, py, pz);
-        
+        sphereGeo.vertices[i].set(px, py + yPos, pz);
         
         position = cubeArray[i].position; 
         target = {x:px, y:py, z:pz};
@@ -143,7 +241,7 @@ function AnimateScene(){
         cubeArray[i].rotation.y += .05;
         cubeArray[i].scale.y = Math.sin(time)*10;
         
-        cubeArray[i].position.set(px, py, pz);
+        cubeArray[i].position.set(px, py + yPos, pz);
         
     }
     
@@ -168,10 +266,22 @@ function AnimateScene(){
         cylinderArray[i].scale.z = avg / 10;
         
     }
+    
+    //Animate the Strips
+    for(var i = 0; i < stripArray.length; i++){
+        
+        stripArray[i].rotation.x += .04 + i*.01;
+        stripArray[i].rotation.y += .05 + i*.01;
+        stripArray[i].rotation.z += .06 + i*.01;
+        
+    }
+    
+    //Camera Rotation
+    camPivot.rotation.y += .004;
+    
 }
 
-//scene.add(cube, cube2);
-camera.position.z = 5;
+
 
 //Main Render Function 
 var render = function() {
@@ -179,11 +289,12 @@ var render = function() {
 
     AnimateScene();
     
-    controls.update();
+//    controls.update();
     renderer.render(scene, camera);
     };
 
 SphereObjects();
 CylinderArray();
+SphereStrips();
 render();
 audio.play();

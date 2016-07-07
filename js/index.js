@@ -282,7 +282,6 @@ function AnimateScene(){
 }
 
 
-
 //Main Render Function 
 var render = function() {
     requestAnimationFrame( render );
@@ -292,6 +291,7 @@ var render = function() {
 //    controls.update();
     renderer.render(scene, camera);
     };
+
 
 SphereObjects();
 CylinderArray();

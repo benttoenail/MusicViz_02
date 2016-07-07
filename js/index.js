@@ -31,8 +31,8 @@ var spotlight2 = new THREE.SpotLight(0xE23721);
 spotlight1.position.set(-10, 20, 5);
 spotlight1.castShadow = true;
 
-spotlight1.shadowMapHeight = 1024;
-spotlight1.shadowMapWidth  = 1024;
+spotlight1.shadowMapHeight = 2048;
+spotlight1.shadowMapWidth  = 2048;
 
 spotlight1.penumbra = .36;
 
@@ -40,8 +40,8 @@ spotlight1.penumbra = .36;
 spotlight2.position.set(10, 20, 5);
 spotlight2.castShadow = true;
 
-spotlight2.shadowMapHeight = 1024;
-spotlight2.shadowMapWidth  = 1024;
+spotlight2.shadowMapHeight = 2048;
+spotlight2.shadowMapWidth  = 2048;
 
 spotlight2.penumbra = .36;
 
@@ -64,6 +64,22 @@ dirLight.castShadow = true;
 scene.fog = new THREE.FogExp2(0xE23721, .025);
 
 // -- -- -- END LIGHTING -- -- -- \\
+
+//PostProcessing
+var composer = new THREE.EffectComposer( renderer );
+var renderPass = new THREE.RenderPass( scene, camera );
+composer.addPass( renderPass );
+
+var rgbEffect = new THREE.ShaderPass( THREE.RGBShiftShader );
+composer.addPass( rgbEffect );
+
+var horizontalShift = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+composer.addPass( horizontalShift );
+
+var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
+effectCopy.renderToScreen = true;
+composer.addPass( effectCopy );
+
 
 //Audio Controls
 var audio, analyser, frequencydata;
@@ -284,12 +300,14 @@ function AnimateScene(){
 
 //Main Render Function 
 var render = function() {
+    
+    composer.render(1);
     requestAnimationFrame( render );
 
     AnimateScene();
     
 //    controls.update();
-    renderer.render(scene, camera);
+//    renderer.render(scene, camera);
     };
 
 

@@ -65,18 +65,6 @@ scene.fog = new THREE.FogExp2(0xE23721, .025);
 
 // -- -- -- END LIGHTING -- -- -- \\
 
-<<<<<<< HEAD
-//PostProcessing
-var composer = new THREE.EffectComposer( renderer );
-var renderPass = new THREE.RenderPass( scene, camera );
-composer.addPass( renderPass );
-
-var rgbEffect = new THREE.ShaderPass( THREE.RGBShiftShader );
-composer.addPass( rgbEffect );
-
-var horizontalShift = new THREE.ShaderPass( THREE.HorizontalBlurShader );
-composer.addPass( horizontalShift );
-=======
 
 // -- -- --  POST PROCESSING -- -- --\\ 
 
@@ -104,17 +92,11 @@ composer.addPass(filmEffect);
 
 var horizontalShift = new THREE.ShaderPass( THREE.HorizontalBlurShader );
 //composer.addPass( horizontalShift );
->>>>>>> 173185bcfc712da2b2e3067e2a305c11b14d9304
 
 var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
 effectCopy.renderToScreen = true;
 composer.addPass( effectCopy );
 
-<<<<<<< HEAD
-=======
-// -- -- -- END POST PROCESSING -- -- --\\
-
->>>>>>> 173185bcfc712da2b2e3067e2a305c11b14d9304
 
 //Audio Controls
 var audio, analyser, frequencydata;

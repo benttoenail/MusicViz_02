@@ -65,6 +65,7 @@ scene.fog = new THREE.FogExp2(0xE23721, .025);
 
 // -- -- -- END LIGHTING -- -- -- \\
 
+<<<<<<< HEAD
 //PostProcessing
 var composer = new THREE.EffectComposer( renderer );
 var renderPass = new THREE.RenderPass( scene, camera );
@@ -75,11 +76,45 @@ composer.addPass( rgbEffect );
 
 var horizontalShift = new THREE.ShaderPass( THREE.HorizontalBlurShader );
 composer.addPass( horizontalShift );
+=======
+
+// -- -- --  POST PROCESSING -- -- --\\ 
+
+var composer = new THREE.EffectComposer( renderer );
+composer.setSize(window.innerWidth, window.innerHeight);
+
+var renderPass = new THREE.RenderPass( scene, camera );
+composer.addPass( renderPass );
+
+var dotScreenEffect = new THREE.DotScreenPass();
+dotScreenEffect.uniforms['scale'].value = 100;
+dotScreenEffect.uniforms['tDiffuse'].value = 1;
+// composer.addPass(dotScreenEffect);
+
+var rgbEffect = new THREE.ShaderPass( THREE.RGBShiftShader );
+composer.addPass( rgbEffect );
+
+var vignette = new THREE.ShaderPass( THREE.VignetteShader );
+vignette.uniforms[ 'darkness' ].value = 2;
+composer.addPass( vignette );
+
+var filmEffect = new THREE.ShaderPass( THREE.FilmShader );
+filmEffect.uniforms['grayscale'].value = .5;
+composer.addPass(filmEffect);
+
+var horizontalShift = new THREE.ShaderPass( THREE.HorizontalBlurShader );
+//composer.addPass( horizontalShift );
+>>>>>>> 173185bcfc712da2b2e3067e2a305c11b14d9304
 
 var effectCopy = new THREE.ShaderPass(THREE.CopyShader);
 effectCopy.renderToScreen = true;
 composer.addPass( effectCopy );
 
+<<<<<<< HEAD
+=======
+// -- -- -- END POST PROCESSING -- -- --\\
+
+>>>>>>> 173185bcfc712da2b2e3067e2a305c11b14d9304
 
 //Audio Controls
 var audio, analyser, frequencydata;
@@ -100,7 +135,7 @@ var clock = new THREE.Clock();
 //Init of Renderer and Canvas
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-renderer.setClearColor(0xf7e6f6, 0);
+renderer.setClearColor(0xf7e6f6, 1);
 
 //Camera Controls
 var controls;
@@ -231,6 +266,14 @@ function AnimateScene(){
     
     analyser.getByteFrequencyData(frequencydata);
     
+    var angle = Math.sin(time);
+    rgbEffect.uniforms['amount'].value = frequencydata[0]/2500;
+    rgbEffect.uniforms['angle'].value = angle;
+    
+    filmEffect.uniforms['time'].value = time;
+    filmEffect.uniforms['nIntensity'].value = frequencydata[0];
+    filmEffect.uniforms['sIntensity'].value = frequencydata[0]/500;
+    
     sphereGeo.verticesNeedUpdate = true;
     
     var position, target;
@@ -298,7 +341,6 @@ function AnimateScene(){
 }
 
 
-
 //Main Render Function 
 var render = function() {
     
@@ -310,6 +352,7 @@ var render = function() {
 //    controls.update();
 //    renderer.render(scene, camera);
     };
+
 
 SphereObjects();
 CylinderArray();
